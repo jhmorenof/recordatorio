@@ -1,5 +1,5 @@
 /* Service worker de Recordatorios: funciona sin internet y maneja los toques en las notificaciones */
-const CACHE = 'recordatorios-v4';
+const CACHE = 'recordatorios-v5';
 const ARCHIVOS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 const FUENTES = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 

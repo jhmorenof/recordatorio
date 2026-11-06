@@ -574,8 +574,11 @@ function cerrar(id){
   if (id === 'sh-confirm' && confirmResolve) { const r = confirmResolve; confirmResolve = null; r(false); }
 }
 let confirmResolve = null;
-function confirmar(msg, ok){
-  return new Promise(res => { confirmResolve = res; $('#c-msg').textContent = msg; $('#c-ok').textContent = ok || 'Aceptar'; abrir('sh-confirm'); });
+function confirmar(msg, ok, primario){
+  return new Promise(res => {
+    confirmResolve = res; $('#c-msg').textContent = msg; $('#c-ok').textContent = ok || 'Aceptar';
+    $('#c-ok').className = 'btn ' + (primario ? 'primary' : 'danger'); abrir('sh-confirm');
+  });
 }
 $('#c-ok').addEventListener('click', () => { const r = confirmResolve; confirmResolve = null; cerrar('sh-confirm'); if (r) r(true); });
 document.querySelectorAll('.sheet').forEach(s => {
@@ -808,9 +811,25 @@ function mostrarRevision(auto){
 /* ---------- Formulario ---------- */
 let editando = null;
 function llenarAvisos(sel, val){ sel.innerHTML = AVISOS.map(([v, l]) => `<option value="${v}" ${Number(val) === v ? 'selected' : ''}>${l}</option>`).join(''); }
+/* Cuándo sonará el aviso de una tarea: 'ok', 'aviso-pasado' o 'hora-pasada' */
+function estadoAviso(fecha, hora, aviso){
+  const ahora = new Date(), evento = dt(fecha, hora), alarma = new Date(evento.getTime() - (Number(aviso) || 0) * 60000);
+  return { alarma, estado: evento <= ahora ? 'hora-pasada' : alarma <= ahora ? 'aviso-pasado' : 'ok' };
+}
+const fmtMomento = d => `${fmtRel(ymd(d)).toLowerCase()} ${d.toLocaleTimeString('es-CO', { hour:'numeric', minute:'2-digit' })}`;
 function pintarDia(){
-  const f = $('#f-fecha').value;
-  $('#f-dia').textContent = f ? `📅 Día: ${cap(fLarga.format(parseYMD(f)))}` : '';
+  const f = $('#f-fecha').value, h = $('#f-hora').value, el = $('#f-dia');
+  if (!f) { el.textContent = ''; return; }
+  let html = `📅 Día: ${cap(fLarga.format(parseYMD(f)))}`;
+  if (h) {
+    const a = estadoAviso(f, h, $('#f-aviso').value);
+    html += a.estado === 'ok' ? `<br>🔔 Te aviso: ${fmtMomento(a.alarma)}`
+      : a.estado === 'aviso-pasado' ? `<br><span class="sync-err">⚠️ Ese aviso (${fmtMomento(a.alarma)}) ya pasó. Elegí “En el momento” o cambiá la hora.</span>`
+      : `<br><span class="sync-err">⚠️ Esa hora ya pasó: esta tarea no va a sonar.</span>`;
+  } else {
+    html += `<br>🔔 Sin hora: te aviso a las ${fmtHora(ajustes().horaSinHora)}`;
+  }
+  el.innerHTML = html;
 }
 function abrirForm(t, pre){
   editando = t || null;
@@ -823,9 +842,9 @@ function abrirForm(t, pre){
   pintarDia(); abrir('sh-form');
   setTimeout(() => { if (!d.titulo) $('#f-titulo').focus(); }, 250);
 }
-$('#f-fecha').addEventListener('change', pintarDia);
+['f-fecha','f-hora','f-aviso'].forEach(id => { $('#'+id).addEventListener('change', pintarDia); $('#'+id).addEventListener('input', pintarDia); });
 
-function guardarForm(e){
+async function guardarForm(e){
   if (e) e.preventDefault();
   if (!$('#form').reportValidity()) return;
   const v = {
@@ -836,6 +855,19 @@ function guardarForm(e){
   };
   if (!v.titulo || !v.fecha) return;
   if (v.vence && v.vence < v.fecha) { toast('El vencimiento no puede ser antes de la fecha'); return; }
+  // Revisar que el aviso todavía pueda sonar
+  const ed = editando;
+  const cambiaAviso = !ed || ed.fecha !== v.fecha || ed.hora !== v.hora || Number(ed.aviso) !== v.aviso;
+  if (v.hora && cambiaAviso && (!ed || ed.estado !== 'cumplida')) {
+    const a = estadoAviso(v.fecha, v.hora, v.aviso);
+    if (a.estado === 'hora-pasada') {
+      if (!await confirmar(`La hora de esta tarea (${fmtMomento(dt(v.fecha, v.hora))}) ya pasó, así que no va a sonar. ¿Guardarla igual?`, 'Guardar sin alarma', true)) return;
+    } else if (a.estado === 'aviso-pasado') {
+      if (!await confirmar(`El aviso anticipado (${fmtMomento(a.alarma)}) ya pasó. ¿Te aviso a las ${fmtHora(v.hora)}, en el momento de la tarea?`, 'Sí, avisar en el momento', true)) return;
+      v.aviso = 0;
+    }
+  }
+  if (editando !== ed) return;
   if (editando) {
     const t = editando, cambioFecha = t.fecha !== v.fecha || t.hora !== v.hora;
     Object.assign(t, v);
