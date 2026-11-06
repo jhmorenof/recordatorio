@@ -1,0 +1,20 @@
+{
+  "name": "Recordatorios",
+  "short_name": "Recordatorios",
+  "description": "Recordatorios personales y laborales para docentes, con alarmas y revisión diaria.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef3fb",
+  "theme_color": "#4a86e0",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Nueva tarea", "short_name": "Nueva", "url": "./?nueva=1", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}

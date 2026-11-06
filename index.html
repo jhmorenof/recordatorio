@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#4a86e0">
+<meta name="description" content="Recordatorios personales y laborales para docentes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Recordatorios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light dark;
+  --font:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --bg:#eef3fb;--text:#152033;--muted:#5d6a80;
+  --glass:rgba(255,255,255,.62);--glass-strong:rgba(255,255,255,.84);--glass-border:rgba(255,255,255,.75);
+  --line:rgba(20,32,27,.09);--field:rgba(255,255,255,.72);
+  --primary:#4a86e0;--primary-glow:rgba(74,134,224,.38);
+  --grad:linear-gradient(135deg,#3f78d6 0%,#5694ea 55%,#72aef0 100%);
+  --soft:color-mix(in srgb,var(--primary) 12%,transparent);
+  --pendiente:#6366f1;--cumplida:#22a06b;--aplazada:#e19a00;--olvidada:#e04848;--reprogramada:#8b5cf6;
+  --shadow-sm:0 1px 2px rgba(16,24,20,.05),0 4px 14px -4px rgba(16,24,20,.10);
+  --shadow:0 2px 6px rgba(16,24,20,.05),0 16px 36px -10px rgba(16,24,20,.18);
+  --r-sm:12px;--r:18px;--r-lg:26px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b1019;--text:#e6ecf5;--muted:#95a2b6;
+    --glass:rgba(26,33,48,.58);--glass-strong:rgba(21,28,42,.9);--glass-border:rgba(255,255,255,.08);
+    --line:rgba(255,255,255,.08);--field:rgba(255,255,255,.05);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3),0 6px 16px -6px rgba(0,0,0,.45);
+    --shadow:0 2px 6px rgba(0,0,0,.3),0 20px 40px -12px rgba(0,0,0,.6);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16px;line-height:1.45;padding-bottom:calc(100px + env(safe-area-inset-bottom));min-height:100vh;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(55% 38% at 0% 0%,rgba(86,148,234,.26),transparent 70%),
+    radial-gradient(45% 40% at 100% 35%,rgba(114,174,240,.22),transparent 70%),
+    radial-gradient(60% 45% at 40% 100%,rgba(139,92,246,.14),transparent 70%)}
+body.lock{overflow:hidden}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;transition:transform .2s var(--ease),background .2s,box-shadow .2s,color .2s,border-color .2s}
+button:active{transform:scale(.96)}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 55%,transparent);outline-offset:2px}
+
+/* Encabezado */
+header{position:relative;overflow:hidden;background:var(--grad);color:#fff;padding:calc(16px + env(safe-area-inset-top)) 0 34px;border-radius:0 0 30px 30px;box-shadow:0 14px 34px -14px var(--primary-glow)}
+header::before,header::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.12);pointer-events:none}
+header::before{width:220px;height:220px;right:-60px;top:-90px}
+header::after{width:140px;height:140px;left:-50px;bottom:-70px;background:rgba(255,255,255,.08)}
+header .wrap{position:relative;z-index:1}
+.top{display:flex;align-items:center;gap:8px}
+.top h1{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin:0;flex:1}
+.hoy{opacity:.88;font-size:.92rem;font-weight:500;margin:2px 0 16px}
+.icon-btn{width:44px;height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;font-size:1.1rem;display:grid;place-items:center}
+.icon-btn.on{background:#fff;color:var(--primary);border-color:#fff}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;padding:10px 4px;text-align:center;color:#fff}
+.stat b{display:block;font-size:1.45rem;font-weight:800;line-height:1.1}
+.stat small{font-size:.72rem;font-weight:600;opacity:.9}
+
+/* Entrada rápida */
+.quick{display:flex;gap:8px;margin:-24px 0 14px;position:relative;z-index:2}
+.quick input{flex:1;min-width:0;padding:15px 16px;border-radius:18px;border:1px solid var(--glass-border);background:var(--glass-strong);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow);transition:box-shadow .2s,border-color .2s}
+.quick input:focus{outline:none;border-color:color-mix(in srgb,var(--primary) 60%,transparent);box-shadow:var(--shadow),0 0 0 4px color-mix(in srgb,var(--primary) 18%,transparent)}
+.quick button{flex:0 0 54px;border:0;border-radius:18px;background:var(--grad);color:#fff;font-size:1.5rem;font-weight:700;box-shadow:0 10px 22px -8px var(--primary-glow)}
+
+.banner{display:flex;gap:10px;align-items:center;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--glass-border);border-radius:var(--r);padding:10px 12px;margin-bottom:14px;font-size:.9rem;box-shadow:var(--shadow-sm)}
+.banner p{margin:0;flex:1}
+.banner button{border:0;background:var(--grad);color:#fff;border-radius:999px;padding:8px 14px;font-weight:700}
+.banner .x{background:transparent;color:var(--muted);padding:6px 8px}
+
+/* Pestañas y filtros */
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px;margin-bottom:8px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:999px;padding:9px 16px;font-size:.9rem;font-weight:600;color:var(--muted)}
+.tab.active{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 8px 18px -8px var(--primary-glow)}
+.tab .n{font-size:.72rem;margin-left:6px;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,currentColor 16%,transparent)}
+.tab .n:empty{display:none}
+.cats{display:flex;gap:6px;margin-bottom:14px}
+.cat{flex:1;border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px;font-size:.85rem;font-weight:600;color:var(--muted)}
+.cat.active{background:var(--soft);color:var(--text);border-color:color-mix(in srgb,var(--primary) 45%,transparent)}
+
+/* Lista */
+.list{list-style:none;margin:0;padding:0}
+.group{display:flex;align-items:center;gap:10px;font-size:.74rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 4px 10px}
+.group::after{content:"";flex:1;height:1px;background:var(--line)}
+.card{--c:var(--pendiente);position:relative;overflow:hidden;display:flex;gap:12px;align-items:flex-start;background:var(--glass);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);border:1px solid var(--glass-border);border-radius:var(--r);padding:14px 12px 14px 16px;margin-bottom:10px;box-shadow:var(--shadow-sm);transition:transform .25s var(--ease),box-shadow .25s,opacity .2s;animation:aparecer .35s var(--ease) both}
+@keyframes aparecer{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 6px 6px 0;background:var(--c);box-shadow:0 0 14px var(--c)}
+.card.st-cumplida{--c:var(--cumplida);opacity:.66}
+.card.st-cumplida .title{text-decoration:line-through;color:var(--muted)}
+.card.st-aplazada{--c:var(--aplazada)}
+.card.st-olvidada{--c:var(--olvidada)}
+.card.st-reprogramada{--c:var(--reprogramada)}
+.check{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:2px solid color-mix(in srgb,var(--c) 55%,transparent);background:transparent;color:#fff;font-weight:800;font-size:.9rem;margin-top:1px;display:grid;place-items:center}
+.st-cumplida .check{background:var(--c);border-color:var(--c);box-shadow:0 4px 12px -4px var(--c)}
+.body{flex:1;min-width:0;cursor:pointer}
+.title{font-weight:700;letter-spacing:-.01em;word-wrap:break-word}
+.notes{color:var(--muted);font-size:.88rem;margin-top:3px;word-wrap:break-word}
+.meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.83rem;font-weight:500;color:var(--muted);margin-top:8px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.badge,.tag{font-size:.72rem;padding:3px 10px;border-radius:999px;font-weight:700}
+.badge{background:color-mix(in srgb,var(--c) 14%,transparent);color:color-mix(in srgb,var(--c) 78%,var(--text));border:1px solid color-mix(in srgb,var(--c) 28%,transparent)}
+.b-pendiente{--c:var(--pendiente)}.b-cumplida{--c:var(--cumplida)}.b-aplazada{--c:var(--aplazada)}.b-olvidada{--c:var(--olvidada)}.b-reprogramada{--c:var(--reprogramada)}
+.tag{background:var(--field);border:1px solid var(--line);color:var(--muted)}
+.tag.alta{--c:var(--olvidada);background:color-mix(in srgb,var(--c) 12%,transparent);border-color:color-mix(in srgb,var(--c) 25%,transparent);color:color-mix(in srgb,var(--c) 80%,var(--text))}
+.more{flex:0 0 auto;border:0;background:transparent;color:var(--muted);font-size:1.3rem;width:36px;height:36px;border-radius:12px}
+.empty{text-align:center;color:var(--muted);padding:44px 16px;background:var(--glass);border:1px dashed var(--line);border-radius:var(--r-lg)}
+.empty div{font-size:2.6rem}
+
+.fab{position:fixed;right:max(18px,calc(50vw - 302px));bottom:calc(22px + env(safe-area-inset-bottom));width:64px;height:64px;border-radius:22px;border:0;background:var(--grad);color:#fff;font-size:2rem;box-shadow:0 14px 30px -8px var(--primary-glow),inset 0 1px 0 rgba(255,255,255,.3);z-index:5}
+footer{text-align:center;color:var(--muted);font-size:.78rem;margin:30px 0 8px}
+
+/* Hojas inferiores */
+.sheet{position:fixed;inset:0;background:rgba(8,12,22,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;z-index:20;animation:fade .2s ease-out}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.panel{background:var(--glass-strong);backdrop-filter:blur(26px) saturate(160%);-webkit-backdrop-filter:blur(26px) saturate(160%);border:1px solid var(--glass-border);border-bottom:0;width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:28px 28px 0 0;padding:10px 20px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.18);animation:up .3s var(--ease)}
+@keyframes up{from{transform:translateY(36px);opacity:.5}to{transform:none;opacity:1}}
+@media (min-width:700px){.sheet{align-items:center}.panel{border-radius:28px;border-bottom:1px solid var(--glass-border)}}
+.grip{width:44px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 12px}
+.panel h2{font-size:1.2rem;font-weight:800;letter-spacing:-.02em;margin:4px 0 16px}
+.fld{display:block;margin-bottom:12px}
+.fld>span{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px;font-weight:700}
+.fld input,.fld select,.fld textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--field);min-height:46px;transition:border-color .2s,box-shadow .2s,background .2s}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 18%,transparent)}
+.fld textarea{resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;gap:8px;margin-bottom:12px;padding:4px;border-radius:16px;background:var(--field);border:1px solid var(--line)}
+.seg label{flex:1}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;padding:10px;border-radius:12px;color:var(--muted);font-weight:600;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.seg input:checked+span{background:var(--glass-strong);color:var(--text);font-weight:800;box-shadow:var(--shadow-sm)}
+.dia{font-size:.85rem;color:var(--muted);margin:0 0 14px}
+.actions{display:flex;gap:10px;margin-top:6px}
+.btn{flex:1;border:1px solid transparent;border-radius:16px;padding:13px;font-weight:700;min-height:48px}
+.btn.primary{background:var(--grad);color:#fff;box-shadow:0 10px 22px -10px var(--primary-glow),inset 0 1px 0 rgba(255,255,255,.25)}
+.btn.ghost{background:var(--field);border-color:var(--line);color:var(--text)}
+.btn.danger{background:color-mix(in srgb,var(--olvidada) 14%,transparent);color:var(--olvidada);border-color:color-mix(in srgb,var(--olvidada) 25%,transparent)}
+.menu{display:grid;gap:8px}
+.menu button{text-align:left;border:1px solid var(--line);background:var(--field);border-radius:16px;padding:13px 16px;min-height:48px;font-weight:600}
+.menu button.danger{color:var(--olvidada)}
+.hist{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
+.hist p{margin:4px 0}
+.check-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-weight:600}
+.check-row input{appearance:none;-webkit-appearance:none;position:relative;width:48px;height:28px;border-radius:999px;background:var(--line);border:1px solid var(--line);cursor:pointer;transition:background .25s}
+.check-row input::before{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .25s var(--ease)}
+.check-row input:checked{background:var(--grad)}
+.check-row input:checked::before{transform:translateX(20px)}
+.sub{font-size:1rem;font-weight:800;margin:22px 0 10px;letter-spacing:-.01em}
+.sync-ok{color:var(--cumplida)}.sync-err{color:var(--olvidada)}
+.note{font-size:.82rem;color:var(--muted);background:var(--soft);border:1px solid color-mix(in srgb,var(--primary) 20%,transparent);border-radius:14px;padding:11px 13px;margin:14px 0}
+
+/* Alarma */
+.alarm{text-align:center}
+.bell{width:88px;height:88px;margin:8px auto 4px;border-radius:50%;display:grid;place-items:center;font-size:2.6rem;background:var(--soft);position:relative}
+.bell::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--primary);animation:pulso 1.6s ease-out infinite}
+.bell span{display:inline-block;animation:ring 1s ease-in-out infinite}
+@keyframes pulso{from{transform:scale(1);opacity:.7}to{transform:scale(1.5);opacity:0}}
+@keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(16deg)}40%{transform:rotate(-14deg)}60%{transform:rotate(8deg)}}
+.alarm h2{margin:10px 0 4px;font-size:1.35rem}
+.alarm .when{color:var(--muted);margin:0 0 12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.grid2 .btn{font-size:.92rem}
+.rev-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.rev-item button{border:1px solid color-mix(in srgb,var(--primary) 25%,transparent);background:var(--soft);border-radius:999px;padding:6px 12px;font-size:.78rem;font-weight:700;flex:0 0 auto}
+
+.toast{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(18,24,38,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:#fff;padding:11px 18px;border-radius:999px;font-size:.9rem;font-weight:600;z-index:30;max-width:90vw;box-shadow:0 10px 28px rgba(0,0,0,.3);animation:fade .2s}
+
+/* Hover solo en dispositivos con puntero */
+@media (hover:hover){
+  .icon-btn:hover,.stat:hover{background:rgba(255,255,255,.28);transform:translateY(-2px)}
+  .icon-btn.on:hover{background:#fff}
+  .quick button:hover,.btn.primary:hover,.banner button:hover{transform:translateY(-2px);filter:brightness(1.06);box-shadow:0 14px 26px -10px var(--primary-glow)}
+  .tab:hover{color:var(--text);transform:translateY(-1px)}
+  .tab.active:hover{color:#fff}
+  .cat:hover{border-color:color-mix(in srgb,var(--primary) 40%,transparent);color:var(--text)}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .check:hover{background:color-mix(in srgb,var(--c) 16%,transparent)}
+  .st-cumplida .check:hover{background:var(--c)}
+  .more:hover{background:var(--soft);color:var(--text)}
+  .fab:hover{transform:translateY(-4px) scale(1.04);box-shadow:0 20px 36px -10px var(--primary-glow)}
+  .fld input:hover,.fld select:hover,.fld textarea:hover{border-color:color-mix(in srgb,var(--primary) 35%,transparent)}
+  .btn.ghost:hover,.menu button:hover{background:var(--soft);border-color:color-mix(in srgb,var(--primary) 30%,transparent)}
+  .menu button:hover{transform:translateX(3px)}
+  .menu button.danger:hover,.btn.danger:hover{background:color-mix(in srgb,var(--olvidada) 16%,transparent);border-color:color-mix(in srgb,var(--olvidada) 35%,transparent)}
+  .rev-item button:hover{background:color-mix(in srgb,var(--primary) 22%,transparent)}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="top">
+      <h1>📋 Recordatorios</h1>
+      <button class="icon-btn" id="btn-bell" aria-label="Alarmas">🔔</button>
+      <button class="icon-btn" id="btn-ajustes" aria-label="Ajustes">⚙️</button>
+    </div>
+    <p class="hoy"><span id="hoy-txt"></span> <span id="sync-txt"></span></p>
+    <div class="stats">
+      <button class="stat" data-goto="hoy"><b id="s-hoy">0</b><small>Hoy</small></button>
+      <button class="stat" data-goto="proximas"><b id="s-prox">0</b><small>Próximas</small></button>
+      <button class="stat" data-goto="atencion"><b id="s-olv">0</b><small>Olvidadas</small></button>
+      <button class="stat" data-goto="cumplidas"><b id="s-ok">0</b><small>Cumplidas</small></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <form class="quick" id="quick">
+    <input id="quick-in" placeholder="Escribí rápido: cita mañana 9am con la directora…" autocomplete="off" enterkeyhint="done">
+    <button type="button" id="quick-btn" aria-label="Crear">＋</button>
+  </form>
+
+  <div class="banner" id="banner" hidden>
+    <p>Activá las alarmas para recibir avisos de tus tareas.</p>
+    <button id="banner-on">Activar</button>
+    <button class="x" id="banner-x" aria-label="Cerrar">✕</button>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="hoy">Hoy<span class="n" id="n-hoy"></span></button>
+    <button class="tab" data-tab="proximas">Próximas<span class="n" id="n-prox"></span></button>
+    <button class="tab" data-tab="atencion">⚠️ Atención<span class="n" id="n-at"></span></button>
+    <button class="tab" data-tab="cumplidas">Cumplidas</button>
+    <button class="tab" data-tab="todas">Todas</button>
+  </nav>
+  <div class="cats" id="cats">
+    <button class="cat active" data-cat="todas">Todas</button>
+    <button class="cat" data-cat="laboral">🏫 Laboral</button>
+    <button class="cat" data-cat="personal">🏠 Personal</button>
+  </div>
+
+  <ul class="list" id="list"></ul>
+  <footer>Hecho con ♥ por Jorge MORENO</footer>
+</main>
+
+<button class="fab" id="fab" aria-label="Nueva tarea">＋</button>
+
+<!-- Formulario -->
+<div class="sheet" id="sh-form" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="form-title">
+    <div class="grip"></div>
+    <h2 id="form-title">Nueva tarea</h2>
+    <form id="form">
+      <label class="fld"><span>Tarea</span><input id="f-titulo" required maxlength="160" placeholder="Ej: Cita con la directora"></label>
+      <label class="fld"><span>Notas (opcional)</span><textarea id="f-notas" rows="2" placeholder="Ej: Llevar lista de materiales"></textarea></label>
+      <div class="seg">
+        <label><input type="radio" name="cat" value="laboral" checked><span>🏫 Laboral</span></label>
+        <label><input type="radio" name="cat" value="personal"><span>🏠 Personal</span></label>
+      </div>
+      <div class="row2">
+        <label class="fld"><span>Fecha</span><input type="date" id="f-fecha" required></label>
+        <label class="fld"><span>Hora</span><input type="time" id="f-hora"></label>
+      </div>
+      <div class="row2">
+        <label class="fld"><span>Vence (opcional)</span><input type="date" id="f-vence"></label>
+        <label class="fld"><span>Avisar</span><select id="f-aviso"></select></label>
+      </div>
+      <label class="fld"><span>Prioridad</span>
+        <select id="f-prio"><option value="alta">🔴 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">🟢 Baja</option></select>
+      </label>
+      <p class="dia" id="f-dia"></p>
+      <div class="actions">
+        <button type="button" class="btn ghost" data-close>Cancelar</button>
+        <button type="button" id="f-guardar" class="btn primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Acciones de una tarea -->
+<div class="sheet" id="sh-acc" hidden><div class="panel" role="dialog" aria-modal="true"><div class="grip"></div><div id="acc-body"></div></div></div>
+
+<!-- Reprogramar -->
+<div class="sheet" id="sh-repro" hidden>
+  <div class="panel" role="dialog" aria-modal="true">
+    <div class="grip"></div>
+    <h2>🔁 Reprogramar</h2>
+    <p class="dia" id="r-titulo"></p>
+    <form id="repro">
+      <div class="row2">
+        <label class="fld"><span>Nueva fecha</span><input type="date" id="r-fecha" required></label>
+        <label class="fld"><span>Nueva hora</span><input type="time" id="r-hora"></label>
+      </div>
+      <label class="fld"><span>Nuevo vencimiento (opcional)</span><input type="date" id="r-vence"></label>
+      <label class="fld"><span>Motivo (opcional)</span><input id="r-motivo" maxlength="120" placeholder="Ej: La directora no estaba"></label>
+      <div class="actions">
+        <button type="button" class="btn ghost" data-close>Cancelar</button>
+        <button type="button" id="r-guardar" class="btn primary">Reprogramar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Alarma -->
+<div class="sheet" id="sh-alarma" hidden><div class="panel alarm" role="alertdialog" aria-modal="true"><div id="alarma-body"></div></div></div>
+
+<!-- Revisión diaria -->
+<div class="sheet" id="sh-rev" hidden><div class="panel" role="dialog" aria-modal="true"><div class="grip"></div><div id="rev-body"></div></div></div>
+
+<!-- Ajustes -->
+<div class="sheet" id="sh-ajustes" hidden>
+  <div class="panel" role="dialog" aria-modal="true">
+    <div class="grip"></div>
+    <h2>⚙️ Ajustes</h2>
+    <div class="check-row"><span>Revisión diaria automática</span><input type="checkbox" id="a-rev"></div>
+    <label class="fld" style="margin-top:12px"><span>Hora de la revisión diaria</span><input type="time" id="a-hrev"></label>
+    <label class="fld"><span>Hora de aviso para tareas sin hora</span><input type="time" id="a-hsin"></label>
+    <label class="fld"><span>Aviso anticipado por defecto</span><select id="a-aviso"></select></label>
+    <div class="check-row"><span>Sonido de alarma</span><input type="checkbox" id="a-son"></div>
+    <div class="check-row"><span>Vibración</span><input type="checkbox" id="a-vib"></div>
+    <h3 class="sub">☁️ Sincronizar con Google Drive</h3>
+    <label class="fld"><span>Dirección del script (termina en /exec)</span><input id="s-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec"></label>
+    <label class="fld"><span>Clave</span><input id="s-clave" type="password" autocomplete="off" spellcheck="false" placeholder="La misma que pusiste en el script"></label>
+    <p class="dia" id="s-estado"></p>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="s-quitar">Desconectar</button>
+      <button type="button" class="btn primary" id="s-conectar">Conectar y sincronizar</button>
+    </div>
+    <div class="note">Las alarmas suenan mientras la app esté abierta (aunque sea en segundo plano). Para un aviso garantizado con el teléfono bloqueado, usá <b>“Añadir a Google Calendar”</b> en cada tarea importante.</div>
+    <div class="menu">
+      <button id="a-instalar" hidden>📲 Instalar como app</button>
+      <button id="a-probar">🔔 Probar alarma</button>
+      <button id="a-export">💾 Exportar copia de seguridad</button>
+      <button id="a-import">📂 Importar copia de seguridad</button>
+      <button id="a-limpiar" class="danger">🧹 Borrar tareas cumplidas</button>
+    </div>
+    <input type="file" id="a-file" accept="application/json,.json" hidden>
+    <div class="actions" style="margin-top:14px"><button class="btn primary" data-close>Listo</button></div>
+  </div>
+</div>
+
+<!-- Confirmación -->
+<div class="sheet" id="sh-confirm" hidden>
+  <div class="panel" role="alertdialog" aria-modal="true">
+    <div class="grip"></div>
+    <h2 id="c-msg"></h2>
+    <div class="actions">
+      <button type="button" class="btn ghost" data-close>Cancelar</button>
+      <button type="button" class="btn danger" id="c-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Utilidades de fecha ---------- */
+const KEY = 'recordatorios_docente_v2';
+const DEF = { revisionActiva:true, horaRevision:'06:30', horaSinHora:'07:00', aviso:10, sonido:true, vibrar:true, ultimaRevision:'', bannerOff:false };
+const ESTADOS = { pendiente:'Pendiente', cumplida:'Cumplida', aplazada:'Aplazada', olvidada:'Olvidada', reprogramada:'Reprogramada' };
+const AVISOS = [[0,'En el momento'],[5,'5 min antes'],[10,'10 min antes'],[15,'15 min antes'],[30,'30 min antes'],[60,'1 hora antes'],[120,'2 horas antes'],[1440,'1 día antes']];
+
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hhmm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const hoy = () => ymd(new Date());
+const parseYMD = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const addDias = (n, base) => { const d = base ? new Date(base) : new Date(); d.setDate(d.getDate()+n); return d; };
+const dt = (f, h) => { const d = parseYMD(f); const [H,M] = (h||'00:00').split(':').map(Number); d.setHours(H, M, 0, 0); return d; };
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const fLarga = new Intl.DateTimeFormat('es-CO', { weekday:'long', day:'numeric', month:'long' });
+const fCorta = new Intl.DateTimeFormat('es-CO', { weekday:'short', day:'numeric', month:'short' });
+
+function fmtRel(f){
+  if (!f) return '';
+  if (f === hoy()) return 'Hoy';
+  if (f === ymd(addDias(1))) return 'Mañana';
+  if (f === ymd(addDias(-1))) return 'Ayer';
+  return cap(fCorta.format(parseYMD(f)));
+}
+function fmtLarga(f){
+  const rel = fmtRel(f), larga = cap(fLarga.format(parseYMD(f)));
+  return ['Hoy','Mañana','Ayer'].includes(rel) ? `${rel} · ${larga}` : larga;
+}
+const fmtHora = h => h ? dt(hoy(), h).toLocaleTimeString('es-CO', { hour:'numeric', minute:'2-digit' }) : 'Sin hora';
+
+/* ---------- Datos ---------- */
+let db = null;
+
+/* Configuración de sincronización (se guarda aparte, nunca va en las copias exportadas) */
+const SYNC_KEY = 'recordatorios_sync_cfg';
+let syncCfg = {}, syncEnCurso = false, syncOtraVez = false, syncTimer = null, syncEstado = '';
+try { syncCfg = JSON.parse(localStorage.getItem(SYNC_KEY) || '{}') || {}; } catch(e) { syncCfg = {}; }
+const syncActivo = () => !!(syncCfg.url && syncCfg.clave);
+function guardarCfg(){ try { localStorage.setItem(SYNC_KEY, JSON.stringify(syncCfg)); } catch(e) {} }
+
+function ajustes(){ return (db && db.ajustes) || DEF; }
+
+function nuevaTarea(p){
+  const t = Object.assign({
+    id: uid(), titulo:'', notas:'', categoria:'laboral', prioridad:'media',
+    fecha: hoy(), hora:'', vence:'', aviso: ajustes().aviso,
+    estado:'pendiente', creada: Date.now(), cumplidaEn:null,
+    aplazamientos:0, reprogramaciones:0, historial:[{ t:Date.now(), a:'Creada' }], notificado:'', mod: Date.now()
+  }, p);
+  marcarSiPasada(t);
+  return t;
+}
+
+function cargar(){
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      return { tareas: Array.isArray(d.tareas) ? d.tareas : [], borradas: d.borradas || {}, ajustes: Object.assign({}, DEF, d.ajustes) };
+    }
+  } catch(e) {}
+  // Migración desde la versión anterior (App_Todo)
+  let tareas = [];
+  try {
+    const viejas = JSON.parse(localStorage.getItem('todos') || '[]');
+    tareas = viejas.map(o => nuevaTarea({ titulo: o.text, estado: o.completed ? 'cumplida' : 'pendiente', cumplidaEn: o.completed ? Date.now() : null }));
+  } catch(e) {}
+  return { tareas, borradas: {}, ajustes: Object.assign({}, DEF) };
+}
+
+function guardar(sinSync){
+  try { localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch(e) { toast('⚠️ No se pudo guardar en este navegador'); }
+  if (!sinSync && typeof programarSync === 'function') programarSync();
+}
+function marcarBorrada(id){ db.borradas = db.borradas || {}; db.borradas[id] = Date.now(); }
+
+const buscar = id => db.tareas.find(t => t.id === id);
+function hist(t, a){ t.mod = Date.now(); t.historial = t.historial || []; t.historial.push({ t:Date.now(), a }); if (t.historial.length > 30) t.historial.shift(); }
+
+/* ---------- Alarmas ---------- */
+const claveAlarma = t => `${t.fecha}T${t.hora||''}|${t.estado==='aplazada'?0:(t.aviso||0)}`;
+function alarmaDe(t){
+  const d = dt(t.fecha, t.hora || ajustes().horaSinHora);
+  const av = t.estado === 'aplazada' ? 0 : (Number(t.aviso) || 0);
+  return new Date(d.getTime() - av * 60000);
+}
+function marcarSiPasada(t){ if (alarmaDe(t) <= new Date()) t.notificado = claveAlarma(t); }
+
+let cola = [], mostrando = false, sonidoTimer = null, actx = null;
+
+function revisar(){
+  const ahora = new Date(), h = hoy();
+  let cambio = false;
+  for (const t of db.tareas) {
+    if (t.estado === 'cumplida') continue;
+    const limite = dt(t.vence || t.fecha, '23:59'); limite.setSeconds(59);
+    if (ahora > limite) {
+      if (t.estado !== 'olvidada') { t.estado = 'olvidada'; hist(t, 'Marcada como olvidada (venció sin cumplirse)'); cambio = true; }
+      continue;
+    }
+    const k = claveAlarma(t);
+    if (t.notificado !== k) {
+      const a = alarmaDe(t);
+      if (ahora >= a) {
+        t.notificado = k; cambio = true;
+        if (ahora - a < 12 * 3600e3) cola.push({ tipo:'alarma', id:t.id });
+      }
+    }
+  }
+  const aj = db.ajustes;
+  if (aj.revisionActiva && aj.ultimaRevision !== h && ahora >= dt(h, aj.horaRevision)) {
+    aj.ultimaRevision = h; cambio = true;
+    cola.push({ tipo:'revision' });
+  }
+  if (cambio) { guardar(); render(); }
+  siguiente();
+}
+
+function siguiente(){
+  if (mostrando || !cola.length) return;
+  if (document.querySelector('.sheet:not([hidden])')) return; // espera a que se cierre otra ventana
+  const item = cola.shift();
+  if (item.tipo === 'revision') { mostrando = true; mostrarRevision(true); return; }
+  const t = buscar(item.id);
+  if (!t || t.estado === 'cumplida') return siguiente();
+  mostrando = true;
+  mostrarAlarma(t);
+}
+
+function finCola(){ detenerSonido(); mostrando = false; setTimeout(siguiente, 300); }
+
+function audio(){
+  if (!actx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) actx = new AC(); }
+  if (actx && actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function beep(){
+  if (!ajustes().sonido) return;
+  const c = audio(); if (!c) return;
+  [0, .25, .5].forEach((o, i) => {
+    const osc = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + o;
+    osc.type = 'sine'; osc.frequency.value = i === 2 ? 1046 : 880;
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(.35, t0 + .02);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + .2);
+    osc.connect(g).connect(c.destination); osc.start(t0); osc.stop(t0 + .22);
+  });
+}
+function vibrar(){ if (ajustes().vibrar && navigator.vibrate) navigator.vibrate([400,200,400]); }
+function sonarAlarma(){
+  detenerSonido();
+  let n = 0;
+  const f = () => { beep(); vibrar(); if (++n >= 15) detenerSonido(); };
+  f(); sonidoTimer = setInterval(f, 4000);
+}
+function detenerSonido(){ clearInterval(sonidoTimer); sonidoTimer = null; if (navigator.vibrate) navigator.vibrate(0); }
+
+function notificar(titulo, cuerpo, tag, id){
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const opts = { body: cuerpo, tag, requireInteraction: true, icon: 'icon-192.png', badge: 'icon-192.png', data: { id } };
+  const nativo = () => { try { new Notification(titulo, opts); } catch(e) {} };
+  try {
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.getRegistration()
+        .then(r => {
+          if (!r) return nativo();
+          const sw = Object.assign({ vibrate:[300,150,300] }, opts);
+          if (id) sw.actions = [{ action:'ok', title:'✅ Cumplida' }, { action:'aplazar', title:'⏸ 10 min' }];
+          return r.showNotification(titulo, sw);
+        })
+        .catch(nativo);
+    } else nativo();
+  } catch(e) { nativo(); }
+}
+
+/* Acciones tocadas desde la notificación del sistema */
+function ejecutarAccion(accion, id){
+  const t = id && buscar(id); if (!t) return;
+  if (!$('#sh-alarma').hidden) cerrar('sh-alarma');
+  if (accion === 'ok' && t.estado !== 'cumplida') toggle(t);
+  else if (accion === 'aplazar') aplazar(t, 10);
+}
+
+async function pedirPermiso(){
+  audio();
+  if (!('Notification' in window)) { toast('Este navegador no permite notificaciones; las alarmas sonarán dentro de la app'); return; }
+  try {
+    const p = await Notification.requestPermission();
+    toast(p === 'granted' ? '🔔 Alarmas activadas' : 'Notificaciones bloqueadas: la alarma sonará solo dentro de la app');
+  } catch(e) {}
+  pintarCampana();
+}
+function pintarCampana(){
+  const ok = 'Notification' in window && Notification.permission === 'granted';
+  $('#btn-bell').classList.toggle('on', ok);
+  $('#banner').hidden = ok || db.ajustes.bannerOff || !('Notification' in window) || Notification.permission === 'denied';
+}
+
+/* ---------- Ventanas (hojas) ---------- */
+function abrir(id){ $('#'+id).hidden = false; document.body.classList.add('lock'); }
+function cerrar(id){
+  $('#'+id).hidden = true;
+  if (!document.querySelector('.sheet:not([hidden])')) document.body.classList.remove('lock');
+  if (id === 'sh-alarma' || id === 'sh-rev') finCola();
+  if (id === 'sh-confirm' && confirmResolve) { const r = confirmResolve; confirmResolve = null; r(false); }
+}
+let confirmResolve = null;
+function confirmar(msg, ok){
+  return new Promise(res => { confirmResolve = res; $('#c-msg').textContent = msg; $('#c-ok').textContent = ok || 'Aceptar'; abrir('sh-confirm'); });
+}
+$('#c-ok').addEventListener('click', () => { const r = confirmResolve; confirmResolve = null; cerrar('sh-confirm'); if (r) r(true); });
+document.querySelectorAll('.sheet').forEach(s => {
+  s.addEventListener('click', e => {
+    if (e.target === s || e.target.closest('[data-close]')) cerrar(s.id);
+  });
+});
+
+let toastTimer;
+function toast(msg){
+  const el = $('#toast'); el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.hidden = true, 2800);
+}
+
+/* ---------- Render ---------- */
+let tab = 'hoy', catFiltro = 'todas';
+
+function esAtencion(t){ return t.estado !== 'cumplida' && (t.estado === 'olvidada' || t.fecha < hoy()); }
+function filtrar(){
+  const h = hoy();
+  return db.tareas.filter(t => {
+    if (catFiltro !== 'todas' && t.categoria !== catFiltro) return false;
+    switch (tab) {
+      case 'hoy': return t.fecha === h || (t.estado !== 'cumplida' && t.vence === h);
+      case 'proximas': return t.fecha > h && t.estado !== 'cumplida';
+      case 'atencion': return esAtencion(t);
+      case 'cumplidas': return t.estado === 'cumplida';
+      default: return true;
+    }
+  });
+}
+const ordenar = (a, b) => (a.fecha + (a.hora || '99')).localeCompare(b.fecha + (b.hora || '99'));
+
+function tarjeta(t){
+  const cat = t.categoria === 'personal' ? '🏠 Personal' : '🏫 Laboral';
+  return `<li class="card st-${t.estado}" data-id="${t.id}">
+    <button class="check" data-act="toggle" aria-label="${t.estado === 'cumplida' ? 'Desmarcar' : 'Marcar como cumplida'}">${t.estado === 'cumplida' ? '✓' : ''}</button>
+    <div class="body" data-act="menu">
+      <div class="title">${esc(t.titulo)}</div>
+      ${t.notas ? `<div class="notes">${esc(t.notas)}</div>` : ''}
+      <div class="meta">
+        <span>📅 ${fmtRel(t.fecha)}</span><span>⏰ ${fmtHora(t.hora)}</span>
+        ${t.vence && t.vence !== t.fecha ? `<span>⌛ Vence ${fmtRel(t.vence)}</span>` : ''}
+      </div>
+      <div class="tags">
+        <span class="badge b-${t.estado}">${ESTADOS[t.estado] || t.estado}</span>
+        <span class="tag">${cat}</span>
+        ${t.prioridad === 'alta' ? '<span class="tag alta">Prioridad alta</span>' : ''}
+        ${t.aplazamientos ? `<span class="tag">⏸ ${t.aplazamientos}</span>` : ''}
+        ${t.reprogramaciones ? `<span class="tag">🔁 ${t.reprogramaciones}</span>` : ''}
+      </div>
+    </div>
+    <button class="more" data-act="menu" aria-label="Opciones">⋯</button>
+  </li>`;
+}
+
+function render(){
+  const h = hoy(), activas = db.tareas.filter(t => t.estado !== 'cumplida');
+  const nHoy = activas.filter(t => t.fecha === h).length;
+  const nProx = activas.filter(t => t.fecha > h).length;
+  const nAt = db.tareas.filter(esAtencion).length;
+  $('#hoy-txt').textContent = cap(fLarga.format(new Date()));
+  $('#s-hoy').textContent = nHoy; $('#s-prox').textContent = nProx;
+  $('#s-olv').textContent = nAt; $('#s-ok').textContent = db.tareas.filter(t => t.estado === 'cumplida').length;
+  $('#n-hoy').textContent = nHoy || ''; $('#n-prox').textContent = nProx || ''; $('#n-at').textContent = nAt || '';
+
+  let lista = filtrar();
+  if (tab === 'cumplidas') lista.sort((a, b) => (b.cumplidaEn || 0) - (a.cumplidaEn || 0));
+  else { lista.sort(ordenar); if (tab === 'hoy') lista.sort((a, b) => (a.estado === 'cumplida') - (b.estado === 'cumplida')); }
+
+  if (!lista.length) {
+    const msj = { hoy:'Nada pendiente para hoy', proximas:'No hay tareas próximas', atencion:'¡Todo al día! Nada olvidado', cumplidas:'Aún no hay tareas cumplidas', todas:'Todavía no hay tareas' }[tab];
+    $('#list').innerHTML = `<li class="empty"><div>🌿</div><p>${msj}</p><p style="font-size:.85rem">Tocá ＋ o escribí arriba para crear una.</p></li>`;
+    return;
+  }
+  let html = '', grupo = null;
+  for (const t of lista) {
+    const g = tab === 'cumplidas' ? '' : t.fecha;
+    if (tab !== 'hoy' && tab !== 'cumplidas' && g !== grupo) { html += `<li class="group">${fmtLarga(g)}</li>`; grupo = g; }
+    html += tarjeta(t);
+  }
+  $('#list').innerHTML = html;
+}
+
+/* ---------- Acciones sobre tareas ---------- */
+function toggle(t){
+  if (t.estado === 'cumplida') {
+    t.estado = 'pendiente'; t.cumplidaEn = null; hist(t, 'Desmarcada como cumplida');
+    marcarSiPasada(t);
+  } else {
+    t.estado = 'cumplida'; t.cumplidaEn = Date.now(); hist(t, 'Cumplida ✓');
+    toast('✓ Tarea cumplida');
+  }
+  guardar(); revisar(); render();
+}
+
+function aplazar(t, minutos){
+  let d;
+  if (minutos === 'manana') d = dt(ymd(addDias(1)), t.hora || ajustes().horaSinHora);
+  else d = new Date(Date.now() + minutos * 60000);
+  t.fecha = ymd(d); t.hora = hhmm(d);
+  if (t.vence && t.vence < t.fecha) t.vence = t.fecha;
+  t.estado = 'aplazada'; t.aplazamientos = (t.aplazamientos || 0) + 1; t.notificado = '';
+  hist(t, `Aplazada a ${fmtRel(t.fecha)} ${fmtHora(t.hora)}`);
+  guardar(); render();
+  toast(`⏸ Aplazada: ${fmtRel(t.fecha)} ${fmtHora(t.hora)}`);
+}
+
+async function eliminar(t){
+  if (!await confirmar(`¿Eliminar “${t.titulo}”?`, 'Eliminar')) return;
+  marcarBorrada(t.id);
+  db.tareas = db.tareas.filter(x => x.id !== t.id);
+  guardar(); render(); toast('Tarea eliminada');
+}
+
+/* Calendario externo: aviso garantizado con el teléfono bloqueado */
+function googleCal(t){
+  const txt = encodeURIComponent(t.titulo), det = encodeURIComponent(t.notas || '');
+  let dates;
+  if (t.hora) {
+    const ini = dt(t.fecha, t.hora), fin = new Date(ini.getTime() + 30 * 60000);
+    const f = d => `${ymd(d).replace(/-/g,'')}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+    dates = `${f(ini)}/${f(fin)}`;
+  } else {
+    dates = `${t.fecha.replace(/-/g,'')}/${ymd(addDias(1, parseYMD(t.fecha))).replace(/-/g,'')}`;
+  }
+  window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${txt}&dates=${dates}&details=${det}`, '_blank');
+}
+function descargarICS(t){
+  const e = s => String(s || '').replace(/\\/g,'\\\\').replace(/[,;]/g, m => '\\' + m).replace(/\n/g,'\\n');
+  const f = d => `${ymd(d).replace(/-/g,'')}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const now = new Date(), stamp = now.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+  let ini, fin;
+  if (t.hora) { const d = dt(t.fecha, t.hora); ini = `DTSTART:${f(d)}`; fin = `DTEND:${f(new Date(d.getTime() + 30*60000))}`; }
+  else { ini = `DTSTART;VALUE=DATE:${t.fecha.replace(/-/g,'')}`; fin = `DTEND;VALUE=DATE:${ymd(addDias(1, parseYMD(t.fecha))).replace(/-/g,'')}`; }
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Recordatorios Docente//ES','BEGIN:VEVENT',
+    `UID:${t.id}@recordatorios`, `DTSTAMP:${stamp}`, ini, fin, `SUMMARY:${e(t.titulo)}`, `DESCRIPTION:${e(t.notas)}`,
+    'BEGIN:VALARM', `TRIGGER:-PT${Number(t.aviso)||0}M`, 'ACTION:DISPLAY', `DESCRIPTION:${e(t.titulo)}`, 'END:VALARM',
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  descargar(new Blob([ics], { type:'text/calendar' }), `recordatorio-${t.fecha}.ics`);
+}
+function descargar(blob, nombre){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------- Hoja de acciones ---------- */
+function abrirAcciones(t){
+  const h = (t.historial || []).slice(-5).reverse().map(x =>
+    `<p>${new Date(x.t).toLocaleString('es-CO',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})} — ${esc(x.a)}</p>`).join('');
+  $('#acc-body').innerHTML = `
+    <h2>${esc(t.titulo)}</h2>
+    <p class="dia">${fmtLarga(t.fecha)} · ${fmtHora(t.hora)}${t.vence ? ` · vence ${fmtRel(t.vence)}` : ''} · <b>${ESTADOS[t.estado]}</b></p>
+    <div class="menu">
+      <button data-a="toggle">${t.estado === 'cumplida' ? '↩️ Marcar como no cumplida' : '✅ Marcar como cumplida'}</button>
+      ${t.estado !== 'cumplida' ? `
+      <button data-a="ap60">⏸ Aplazar 1 hora</button>
+      <button data-a="apm">⏸ Aplazar a mañana</button>
+      <button data-a="repro">🔁 Reprogramar…</button>` : ''}
+      <button data-a="editar">✏️ Editar</button>
+      <button data-a="gcal">📆 Añadir a Google Calendar</button>
+      <button data-a="ics">⬇️ Descargar evento (.ics)</button>
+      <button data-a="borrar" class="danger">🗑 Eliminar</button>
+    </div>
+    ${h ? `<div class="hist"><b>Historial</b>${h}</div>` : ''}`;
+  $('#acc-body').onclick = e => {
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    const a = b.dataset.a;
+    cerrar('sh-acc');
+    ({ toggle:()=>toggle(t), ap60:()=>aplazar(t,60), apm:()=>aplazar(t,'manana'), repro:()=>abrirRepro(t),
+       editar:()=>abrirForm(t), gcal:()=>googleCal(t), ics:()=>descargarICS(t), borrar:()=>eliminar(t) })[a]();
+  };
+  abrir('sh-acc');
+}
+
+/* ---------- Alarma ---------- */
+function mostrarAlarma(t){
+  $('#alarma-body').innerHTML = `
+    <div class="bell"><span>🔔</span></div>
+    <h2>${esc(t.titulo)}</h2>
+    <p class="when">${fmtLarga(t.fecha)} · ${fmtHora(t.hora)}</p>
+    ${t.notas ? `<p class="note" style="text-align:left">${esc(t.notas)}</p>` : ''}
+    <button class="btn primary" data-a="ok" style="width:100%">✅ Cumplida</button>
+    <div class="grid2">
+      <button class="btn ghost" data-a="10">⏸ 10 min</button>
+      <button class="btn ghost" data-a="60">⏸ 1 hora</button>
+      <button class="btn ghost" data-a="manana">⏸ Mañana</button>
+      <button class="btn ghost" data-a="repro">🔁 Reprogramar</button>
+    </div>
+    <button class="btn ghost" data-a="cerrar" style="width:100%;margin-top:8px">Cerrar aviso</button>`;
+  $('#alarma-body').onclick = e => {
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    const a = b.dataset.a;
+    cerrar('sh-alarma');
+    if (a === 'ok') toggle(t);
+    else if (a === 'repro') abrirRepro(t);
+    else if (a === '10' || a === '60') aplazar(t, Number(a));
+    else if (a === 'manana') aplazar(t, 'manana');
+  };
+  abrir('sh-alarma');
+  sonarAlarma();
+  notificar('🔔 ' + t.titulo, `${fmtHora(t.hora)}${t.notas ? ' · ' + t.notas : ''}`, t.id, t.id);
+}
+
+/* ---------- Revisión diaria ---------- */
+function mostrarRevision(auto){
+  const h = hoy();
+  const deHoy = db.tareas.filter(t => t.estado !== 'cumplida' && (t.fecha === h || t.vence === h)).sort(ordenar);
+  const olv = db.tareas.filter(esAtencion).sort(ordenar);
+  const item = t => `<div class="rev-item"><span>${t.hora ? fmtHora(t.hora) + ' · ' : ''}${esc(t.titulo)}</span><button data-id="${t.id}">Opciones</button></div>`;
+  $('#rev-body').innerHTML = `
+    <h2>☀️ Revisión del día</h2>
+    <p class="dia">${cap(fLarga.format(new Date()))}</p>
+    <p><b>Para hoy (${deHoy.length})</b></p>
+    ${deHoy.length ? deHoy.map(item).join('') : '<p class="dia">Sin tareas para hoy.</p>'}
+    ${olv.length ? `<p style="margin-top:14px"><b>⚠️ Olvidadas o atrasadas (${olv.length})</b></p>${olv.map(item).join('')}
+      <p class="dia" style="margin-top:8px">Reprogramalas o marcalas como cumplidas.</p>` : ''}
+    <div class="actions" style="margin-top:14px"><button class="btn primary" data-close>Entendido</button></div>`;
+  $('#rev-body').onclick = e => {
+    const b = e.target.closest('button[data-id]'); if (!b) return;
+    const t = buscar(b.dataset.id); cerrar('sh-rev'); if (t) abrirAcciones(t);
+  };
+  abrir('sh-rev');
+  if (auto) {
+    notificar('☀️ Revisión del día', `Hoy: ${deHoy.length} tarea(s)${olv.length ? ` · ${olv.length} olvidada(s)` : ''}`, 'revision');
+    beep();
+  }
+}
+
+/* ---------- Formulario ---------- */
+let editando = null;
+function llenarAvisos(sel, val){ sel.innerHTML = AVISOS.map(([v, l]) => `<option value="${v}" ${Number(val) === v ? 'selected' : ''}>${l}</option>`).join(''); }
+function pintarDia(){
+  const f = $('#f-fecha').value;
+  $('#f-dia').textContent = f ? `📅 Día: ${cap(fLarga.format(parseYMD(f)))}` : '';
+}
+function abrirForm(t, pre){
+  editando = t || null;
+  const d = t || Object.assign({ titulo:'', notas:'', categoria:'laboral', prioridad:'media', fecha:hoy(), hora:'', vence:'', aviso:ajustes().aviso }, pre);
+  $('#form-title').textContent = t ? 'Editar tarea' : 'Nueva tarea';
+  $('#f-titulo').value = d.titulo; $('#f-notas').value = d.notas || '';
+  document.querySelector(`input[name=cat][value=${d.categoria === 'personal' ? 'personal' : 'laboral'}]`).checked = true;
+  $('#f-fecha').value = d.fecha; $('#f-hora').value = d.hora || ''; $('#f-vence').value = d.vence || '';
+  llenarAvisos($('#f-aviso'), d.aviso); $('#f-prio').value = d.prioridad || 'media';
+  pintarDia(); abrir('sh-form');
+  setTimeout(() => { if (!d.titulo) $('#f-titulo').focus(); }, 250);
+}
+$('#f-fecha').addEventListener('change', pintarDia);
+
+function guardarForm(e){
+  if (e) e.preventDefault();
+  if (!$('#form').reportValidity()) return;
+  const v = {
+    titulo: $('#f-titulo').value.trim(), notas: $('#f-notas').value.trim(),
+    categoria: document.querySelector('input[name=cat]:checked').value,
+    fecha: $('#f-fecha').value, hora: $('#f-hora').value, vence: $('#f-vence').value,
+    aviso: Number($('#f-aviso').value), prioridad: $('#f-prio').value
+  };
+  if (!v.titulo || !v.fecha) return;
+  if (v.vence && v.vence < v.fecha) { toast('El vencimiento no puede ser antes de la fecha'); return; }
+  if (editando) {
+    const t = editando, cambioFecha = t.fecha !== v.fecha || t.hora !== v.hora;
+    Object.assign(t, v);
+    if (cambioFecha && t.estado !== 'cumplida') {
+      if (t.estado === 'olvidada' || t.estado === 'aplazada') t.estado = 'reprogramada';
+      hist(t, `Fecha cambiada a ${fmtRel(t.fecha)} ${fmtHora(t.hora)}`);
+      t.notificado = ''; marcarSiPasada(t);
+    } else hist(t, 'Editada');
+    toast('Cambios guardados');
+  } else {
+    db.tareas.push(nuevaTarea(v));
+    toast(`Guardada para ${fmtRel(v.fecha)} ${v.hora ? fmtHora(v.hora) : ''}`);
+  }
+  guardar(); cerrar('sh-form'); revisar(); render();
+}
+$('#f-guardar').addEventListener('click', guardarForm);
+$('#form').addEventListener('submit', guardarForm);
+
+/* ---------- Reprogramar ---------- */
+let reproT = null;
+function abrirRepro(t){
+  reproT = t;
+  $('#r-titulo').textContent = t.titulo;
+  $('#r-fecha').value = t.fecha < hoy() ? ymd(addDias(1)) : t.fecha;
+  $('#r-hora').value = t.hora || ''; $('#r-vence').value = ''; $('#r-motivo').value = '';
+  abrir('sh-repro');
+}
+function guardarRepro(e){
+  if (e) e.preventDefault();
+  if (!$('#repro').reportValidity()) return;
+  const t = reproT; if (!t) return;
+  const f = $('#r-fecha').value, h = $('#r-hora').value, ve = $('#r-vence').value, m = $('#r-motivo').value.trim();
+  if (ve && ve < f) { toast('El vencimiento no puede ser antes de la fecha'); return; }
+  t.fecha = f; t.hora = h; t.vence = ve || (t.vence && t.vence >= f ? t.vence : '');
+  t.estado = 'reprogramada'; t.reprogramaciones = (t.reprogramaciones || 0) + 1; t.notificado = '';
+  marcarSiPasada(t);
+  hist(t, `Reprogramada a ${fmtRel(f)} ${fmtHora(h)}${m ? ' — ' + m : ''}`);
+  guardar(); cerrar('sh-repro'); render();
+  toast(`🔁 Reprogramada: ${fmtRel(f)} ${h ? fmtHora(h) : ''}`);
+}
+$('#r-guardar').addEventListener('click', guardarRepro);
+$('#repro').addEventListener('submit', guardarRepro);
+
+/* ---------- Entrada rápida en lenguaje natural ---------- */
+function interpretar(txt){
+  let s = ' ' + txt + ' ', fecha = null, hora = '', tarde = false, manana = false;
+  const quitar = re => { s = s.replace(re, ' '); };
+  if (/\b(por|en|de)\s+la\s+ma[ñn]ana\b/i.test(s)) { manana = true; quitar(/\b(por|en|de)\s+la\s+ma[ñn]ana\b/i); }
+  if (/\b(por|en|de)\s+la\s+(tarde|noche)\b/i.test(s)) { tarde = true; quitar(/\b(por|en|de)\s+la\s+(tarde|noche)\b/i); }
+
+  const dias = ['domingo','lunes','martes','mi[eé]rcoles','jueves','viernes','s[aá]bado'];
+  let m;
+  if (/\bpasado\s+ma[ñn]ana\b/i.test(s)) { fecha = addDias(2); quitar(/\bpasado\s+ma[ñn]ana\b/i); }
+  else if (/\bma[ñn]ana\b/i.test(s)) { fecha = addDias(1); quitar(/\bma[ñn]ana\b/i); }
+  else if (/\bhoy\b/i.test(s)) { fecha = addDias(0); quitar(/\bhoy\b/i); }
+  else if ((m = s.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/))) {
+    let y = m[3] ? Number(m[3]) : new Date().getFullYear(); if (y < 100) y += 2000;
+    const d = new Date(y, Number(m[2]) - 1, Number(m[1]));
+    if (!m[3] && d < parseYMD(hoy())) d.setFullYear(y + 1);
+    if (!isNaN(d)) fecha = d; quitar(m[0]);
+  } else {
+    for (let i = 0; i < 7; i++) {
+      const re = new RegExp('\\b(?:el\\s+|este\\s+|pr[oó]ximo\\s+)?' + dias[i] + '\\b', 'i');
+      if (re.test(s)) { fecha = addDias((i - new Date().getDay() + 7) % 7 || 7); quitar(re); break; }
+    }
+  }
+
+  const reH = [
+    /\ba\s+las?\s+(\d{1,2})(?:[:.h](\d{2}))?\s*(a\.?\s?m\.?|p\.?\s?m\.?)?/i,
+    /\b(\d{1,2})(?::(\d{2}))?\s*(a\.?\s?m\.?|p\.?\s?m\.?)(?=[\s,.]|$)/i,
+    /\b(\d{1,2}):(\d{2})\b/
+  ];
+  for (const re of reH) {
+    m = s.match(re);
+    if (m) {
+      let H = Number(m[1]); const M = Number(m[2] || 0);
+      const ap = (m[3] || '').replace(/[\s.]/g, '').toLowerCase();
+      if (ap === 'pm' && H < 12) H += 12;
+      if (ap === 'am' && H === 12) H = 0;
+      if (!ap) { if (tarde && H < 12) H += 12; else if (!manana && H >= 1 && H <= 6) H += 12; }
+      if (H <= 23 && M <= 59) { hora = `${pad(H)}:${pad(M)}`; quitar(m[0]); }
+      break;
+    }
+  }
+  if (!hora && manana) hora = '08:00';
+
+  const laboral = /directora?|rector|coordinador|clase|estudiante|alumno|planeaci|reuni[oó]n|padres|acudiente|materiales|colegio|escuela|sede|microcentro|piar|calificaci|evaluaci|docente|secretar[ií]a|consejo|acta|grado|taller|rectora|reunir|boletin|boletín/i;
+  let titulo = s.replace(/\s{2,}/g, ' ').trim().replace(/^(el|la|para|de|a)\s+/i, '').replace(/\s+(a|el|para|de)$/i, '');
+  if (!titulo) titulo = txt.trim();
+  return { titulo: cap(titulo), fecha: ymd(fecha || new Date()), hora, categoria: laboral.test(txt) ? 'laboral' : 'personal' };
+}
+function enviarRapido(e){
+  if (e) e.preventDefault();
+  const txt = $('#quick-in').value.trim();
+  audio();
+  if (!txt) { abrirForm(); return; }
+  abrirForm(null, interpretar(txt));
+  $('#quick-in').value = '';
+}
+$('#quick-btn').addEventListener('click', enviarRapido);
+$('#quick').addEventListener('submit', enviarRapido);
+$('#quick-in').addEventListener('keydown', e => { if (e.key === 'Enter') enviarRapido(e); });
+
+/* ---------- Ajustes ---------- */
+function abrirAjustes(){
+  const a = db.ajustes;
+  $('#a-rev').checked = a.revisionActiva; $('#a-hrev').value = a.horaRevision; $('#a-hsin').value = a.horaSinHora;
+  llenarAvisos($('#a-aviso'), a.aviso); $('#a-son').checked = a.sonido; $('#a-vib').checked = a.vibrar;
+  abrir('sh-ajustes');
+}
+['a-rev','a-hrev','a-hsin','a-aviso','a-son','a-vib'].forEach(id => $('#'+id).addEventListener('change', () => {
+  const a = db.ajustes;
+  a.revisionActiva = $('#a-rev').checked; a.horaRevision = $('#a-hrev').value || '06:30';
+  a.horaSinHora = $('#a-hsin').value || '07:00'; a.aviso = Number($('#a-aviso').value);
+  a.sonido = $('#a-son').checked; a.vibrar = $('#a-vib').checked;
+  guardar();
+}));
+$('#a-probar').onclick = () => { audio(); beep(); vibrar(); notificar('🔔 Prueba de alarma', 'Así se verán tus recordatorios', 'prueba'); toast('Sonó la prueba 🔔'); };
+$('#a-export').onclick = () => { descargar(new Blob([JSON.stringify(db, null, 2)], { type:'application/json' }), `recordatorios-${hoy()}.json`); };
+$('#a-import').onclick = () => $('#a-file').click();
+$('#a-file').onchange = e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!Array.isArray(d.tareas)) throw 0;
+      const ids = new Set(db.tareas.map(t => t.id));
+      const nuevas = d.tareas.filter(t => t && t.id && t.titulo && !ids.has(t.id));
+      db.tareas.push(...nuevas); guardar(); render(); revisar();
+      toast(`Importadas ${nuevas.length} tarea(s)`);
+    } catch(err) { toast('El archivo no es una copia válida'); }
+    e.target.value = '';
+  };
+  r.readAsText(file);
+};
+$('#a-limpiar').onclick = async () => {
+  const n = db.tareas.filter(t => t.estado === 'cumplida').length;
+  if (!n) { toast('No hay tareas cumplidas'); return; }
+  if (!await confirmar(`¿Borrar ${n} tarea(s) cumplida(s)?`, 'Borrar')) return;
+  db.tareas.forEach(t => { if (t.estado === 'cumplida') marcarBorrada(t.id); });
+  db.tareas = db.tareas.filter(t => t.estado !== 'cumplida'); guardar(); render(); toast('Listo');
+};
+
+/* ---------- Eventos generales ---------- */
+$('#list').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'), card = e.target.closest('.card');
+  if (!b || !card) return;
+  const t = buscar(card.dataset.id); if (!t) return;
+  audio();
+  b.dataset.act === 'toggle' ? toggle(t) : abrirAcciones(t);
+});
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab'); if (!b) return; irA(b.dataset.tab);
+});
+function irA(nombre){
+  tab = nombre;
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
+  render();
+}
+document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => irA(b.dataset.goto)));
+$('#cats').addEventListener('click', e => {
+  const b = e.target.closest('.cat'); if (!b) return;
+  catFiltro = b.dataset.cat;
+  document.querySelectorAll('.cat').forEach(x => x.classList.toggle('active', x === b));
+  render();
+});
+$('#fab').onclick = () => { audio(); abrirForm(); };
+$('#btn-ajustes').onclick = abrirAjustes;
+$('#btn-bell').onclick = () => {
+  if ('Notification' in window && Notification.permission === 'granted') mostrarRevision(false);
+  else pedirPermiso();
+};
+$('#banner-on').onclick = pedirPermiso;
+$('#banner-x').onclick = () => { db.ajustes.bannerOff = true; guardar(); pintarCampana(); };
+document.addEventListener('pointerdown', () => audio(), { once:true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); revisar(); sincronizar(); } });
+window.addEventListener('focus', revisar);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { const s = [...document.querySelectorAll('.sheet:not([hidden])')].pop(); if (s) cerrar(s.id); }
+});
+
+/* ---------- Inicio ---------- */
+db = cargar();
+guardar();
+pintarCampana();
+render();
+revisar();
+setInterval(revisar, 20000);
+
+/* ---------- Sincronización con Google Drive ---------- */
+
+function pintarSync(estado, msg){
+  syncEstado = estado || syncEstado;
+  const hora = syncCfg.ultima ? new Date(syncCfg.ultima).toLocaleTimeString('es-CO', { hour:'numeric', minute:'2-digit' }) : '';
+  const txt = !syncActivo() ? '' :
+    syncEstado === 'sync' ? '· ☁️ Sincronizando…' :
+    syncEstado === 'error' ? '· ⚠️ Sin sincronizar' :
+    hora ? `· ☁️ ${hora}` : '';
+  $('#sync-txt').textContent = txt;
+  const el = $('#s-estado');
+  if (!syncActivo()) { el.textContent = 'No conectado. Las tareas solo están en este dispositivo.'; el.className = 'dia'; }
+  else if (syncEstado === 'error') { el.textContent = '⚠️ ' + (msg || syncCfg.error || 'No se pudo sincronizar'); el.className = 'dia sync-err'; }
+  else if (syncCfg.ultima) { el.textContent = `✅ Conectado · última sincronización: ${fmtRel(ymd(new Date(syncCfg.ultima)))} ${hora}`; el.className = 'dia sync-ok'; }
+  else { el.textContent = 'Conectado.'; el.className = 'dia'; }
+}
+
+function programarSync(){
+  if (!syncActivo()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(sincronizar, 2500);
+}
+
+/* Une lo que llega de Drive con lo local: gana el cambio más reciente de cada tarea */
+function aplicarRemoto(r){
+  const mod = t => Number(t.mod || t.creada || 0);
+  const locales = {}; db.tareas.forEach(t => locales[t.id] = t);
+  const borradas = Object.assign({}, db.borradas || {});
+  Object.entries(r.borradas || {}).forEach(([id, ts]) => { borradas[id] = Math.max(Number(borradas[id] || 0), Number(ts) || 0); });
+  const out = {};
+  (r.tareas || []).forEach(t => {
+    if (!t || !t.id || !t.titulo) return;
+    const loc = locales[t.id];
+    if (loc) t.notificado = loc.notificado;      // las alarmas ya avisadas en este equipo no se repiten
+    else marcarSiPasada(t);                        // tarea nueva de otro equipo: no avisar lo que ya pasó
+    out[t.id] = t;
+  });
+  let pendiente = Object.keys(db.borradas || {}).some(id => !((r.borradas || {})[id]));
+  db.tareas.forEach(t => {
+    const rem = out[t.id];
+    if (!rem || mod(t) > mod(rem)) { out[t.id] = t; pendiente = true; }
+  });
+  const limite = Date.now() - 60 * 864e5;
+  Object.keys(borradas).forEach(id => {
+    if (borradas[id] < limite) delete borradas[id];
+    else if (out[id] && borradas[id] >= mod(out[id])) { delete out[id]; }
+  });
+  db.tareas = Object.values(out);
+  db.borradas = borradas;
+  if (!pendiente) return false;
+  const remotas = {}; (r.tareas || []).forEach(x => { if (x && x.id) remotas[x.id] = x; });
+  const rb = r.borradas || {};
+  return db.tareas.some(t => !remotas[t.id] || mod(remotas[t.id]) < mod(t)) ||
+         Object.keys(borradas).some(id => !(id in rb));
+}
+
+async function sincronizar(manual){
+  if (!syncActivo()) return false;
+  if (!navigator.onLine) { syncCfg.error = 'Sin internet: se sincroniza al volver la conexión'; pintarSync('error'); return false; }
+  if (syncEnCurso) { syncOtraVez = true; return false; }
+  syncEnCurso = true; clearTimeout(syncTimer); pintarSync('sync');
+  let ok = false;
+  try {
+    const resp = await fetch(syncCfg.url, {
+      method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ clave: syncCfg.clave, accion: 'sync', tareas: db.tareas, borradas: db.borradas || {} })
+    });
+    const r = await resp.json();
+    if (!r.ok) throw new Error(r.error === 'clave' ? 'Clave incorrecta' : (r.error || 'Respuesta inválida del script'));
+    const faltaSubir = aplicarRemoto(r);
+    guardar(true); render(); revisar();
+    syncCfg.ultima = Date.now(); syncCfg.error = ''; guardarCfg();
+    pintarSync('ok'); ok = true;
+    if (faltaSubir) syncOtraVez = true;
+    if (manual) toast(`☁️ Sincronizado · ${db.tareas.length} tarea(s)`);
+  } catch(e) {
+    syncCfg.error = /clave/i.test(e.message) ? 'Clave incorrecta: revisá que sea igual a la del script'
+      : /inválida|Falta/.test(e.message) ? e.message
+      : 'No se pudo conectar con el script. Revisá la dirección.';
+    guardarCfg(); pintarSync('error');
+    if (manual) toast('⚠️ ' + syncCfg.error);
+  } finally {
+    syncEnCurso = false;
+    if (syncOtraVez) { syncOtraVez = false; programarSync(); }
+  }
+  return ok;
+}
+
+$('#s-conectar').onclick = async () => {
+  const url = $('#s-url').value.trim(), clave = $('#s-clave').value.trim();
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec\/?$/.test(url)) { toast('La dirección debe ser la del script y terminar en /exec'); return; }
+  if (!clave) { toast('Escribí la clave'); return; }
+  syncCfg = { url: url.replace(/\/$/, ''), clave, ultima: 0 }; guardarCfg();
+  $('#s-conectar').disabled = true;
+  await sincronizar(true);
+  $('#s-conectar').disabled = false;
+};
+$('#s-quitar').onclick = async () => {
+  if (!syncActivo()) { toast('No estaba conectado'); return; }
+  if (!await confirmar('¿Desconectar la sincronización? Tus tareas siguen en este dispositivo y en Drive.', 'Desconectar')) return;
+  syncCfg = {}; guardarCfg(); $('#s-url').value = ''; $('#s-clave').value = ''; pintarSync('');
+  toast('Sincronización desconectada');
+};
+$('#btn-ajustes').addEventListener('click', () => { $('#s-url').value = syncCfg.url || ''; $('#s-clave').value = syncCfg.clave || ''; pintarSync(); });
+window.addEventListener('online', () => sincronizar());
+setInterval(() => { if (!document.hidden) sincronizar(); }, 180000);
+pintarSync(syncCfg.error ? 'error' : 'ok');
+sincronizar();
+
+/* ---------- App instalable (PWA) ---------- */
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.tipo === 'accion') ejecutarAccion(e.data.accion, e.data.id);
+  });
+}
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+let instalador = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalador = e; $('#a-instalar').hidden = false; });
+window.addEventListener('appinstalled', () => { $('#a-instalar').hidden = true; toast('📲 App instalada'); });
+$('#a-instalar').onclick = async () => {
+  if (!instalador) return;
+  instalador.prompt();
+  try { await instalador.userChoice; } catch(e) {}
+  instalador = null; $('#a-instalar').hidden = true;
+};
+try {
+  const q = new URLSearchParams(location.search);
+  if (q.get('accion')) ejecutarAccion(q.get('accion'), q.get('id'));
+  if (q.get('nueva')) abrirForm();
+  if (q.toString()) history.replaceState(null, '', location.pathname);
+} catch(e) {}
+})();
+</script>
+</body>
+</html>
